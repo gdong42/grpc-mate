@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"strings"
 
+	perrors "github.com/gdong42/grpc-mate/errors"
 	"github.com/gdong42/grpc-mate/metadata"
-	perrors "github.com/mercari/grpc-http-proxy/errors"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	grpc_metadata "google.golang.org/grpc/metadata"

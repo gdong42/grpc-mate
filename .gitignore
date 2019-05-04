@@ -16,3 +16,7 @@
 
 main
 debug
+grpc-mate
+
+vendor/
+

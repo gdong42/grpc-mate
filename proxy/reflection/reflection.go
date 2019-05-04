@@ -9,7 +9,7 @@ import (
 	"github.com/jhump/protoreflect/dynamic"
 	"github.com/pkg/errors"
 
-	perrors "github.com/mercari/grpc-http-proxy/errors"
+	perrors "github.com/gdong42/grpc-mate/errors"
 )
 
 // MethodInvocation contains a method and a message used to invoke an RPC

@@ -13,7 +13,7 @@ import (
 	grpc_metadata "google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
-	"github.com/mercari/grpc-http-proxy/errors"
+	"github.com/gdong42/grpc-mate/errors"
 )
 
 // Stub performs gRPC calls based on descriptors obtained through reflection
