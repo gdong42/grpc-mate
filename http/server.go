@@ -12,12 +12,13 @@ import (
 // GrpcClient is a dynamic gRPC client that performs reflection
 type GrpcClient interface {
 	IsReady() bool
-	Invoke(context.Context,
-		string,
-		string,
-		[]byte,
-		*metadata.Metadata,
-	) ([]byte, error)
+	Invoke(ctx context.Context,
+		serviceName string,
+		methodName string,
+		message []byte,
+		md *metadata.Metadata,
+	) (response []byte, err error)
+	Introspect() (response []byte, err error)
 }
 
 // Server is a grpc-mate server
