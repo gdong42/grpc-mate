@@ -29,7 +29,38 @@ func (s *Server) HealthCheckHandler() http.HandlerFunc {
 			w.WriteHeader(http.StatusMethodNotAllowed)
 			return
 		}
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("{\"status\":\"UP\"}"))
+	}
+}
+
+// IntrospectHandler handles requests that introspects all services and types
+func (s *Server) IntrospectHandler(client GrpcClient) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+		// example path and query parameter:
+		// example.com/actuator/services - list all services
+
+		if !client.IsReady() {
+			w.WriteHeader(http.StatusBadGateway)
+			return
+		}
+		response, err := client.Introspect()
+		if err != nil {
+			returnError(w, errors.Cause(err).(perrors.Error))
+			s.logger.Error("error in introspection",
+				zap.String("err", err.Error()))
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write(response)
+		return
 	}
 }
 

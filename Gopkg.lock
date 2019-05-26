@@ -2,12 +2,21 @@
 
 
 [[projects]]
-  digest = "1:fd0a0705475581c7eb965259d417706cb49f42bde408502c3b53f139b7253d67"
+  digest = "1:590b5963972914520e461a3ebbb534544b890d51ccbc05ade68736d8fefcb565"
+  name = "github.com/fullstorydev/grpcurl"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "0fcd3253f68d759155254a1e3c76f8a797b5dec1"
+  version = "v1.2.1"
+
+[[projects]]
+  digest = "1:68c1ed7535cfc63ec08bcedec0ef672cd0cdc7491e61b673860ce991d4d65baf"
   name = "github.com/golang/protobuf"
   packages = [
     "jsonpb",
     "proto",
     "protoc-gen-go/descriptor",
+    "protoc-gen-go/plugin",
     "ptypes",
     "ptypes/any",
     "ptypes/duration",
@@ -21,11 +30,13 @@
   version = "v1.3.1"
 
 [[projects]]
-  digest = "1:7c67630dfc1f426a14950ea9858fcce0c2510d56887e2962d6cd38494cd621e6"
+  digest = "1:a37a3ea97e06f611bde0e4f465175c512fb587062d864c8c62b4e209f5d6cbb5"
   name = "github.com/jhump/protoreflect"
   packages = [
     "desc",
     "desc/internal",
+    "desc/protoparse",
+    "desc/protoprint",
     "dynamic",
     "dynamic/grpcdynamic",
     "grpcreflect",
@@ -146,9 +157,15 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:c3076e7defee87de1236f1814beb588f40a75544c60121e6eb38b3b3721783e2"
+  digest = "1:ee176aa1bf410f8bb5250077007257e1a77eeca368e25e67be98a6f47daaeb3d"
   name = "google.golang.org/genproto"
-  packages = ["googleapis/rpc/status"]
+  packages = [
+    "googleapis/rpc/status",
+    "protobuf/api",
+    "protobuf/field_mask",
+    "protobuf/ptype",
+    "protobuf/source_context",
+  ]
   pruneopts = "UT"
   revision = "54afdca5d873f7b529e2ce3def1a99df16feda90"
 
@@ -199,6 +216,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "github.com/fullstorydev/grpcurl",
     "github.com/golang/protobuf/proto",
     "github.com/golang/protobuf/ptypes/any",
     "github.com/jhump/protoreflect/desc",
