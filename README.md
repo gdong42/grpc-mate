@@ -15,6 +15,13 @@ running within Kubernetes cluster.
 
 ## Features
 
+* **HTTP to gRPC Translation** - Translates gRPC services into HTTP JSON endpoints.
+* **Independent Reverse Proxy** - Runs as an independent proxy server against upstream gRPC service, and evolving of the underlying gRPC service does not require an upgrade or rebuild
+of gRPC Mate server.
+* **Easy to Setup** - Requires only 1) the upstream gRPC server enabling gRPC reflection service, and 2) the gRPC listening address and port passing to gRPC Mate.
+* **Management Endpoint** - Provides basic management endpoints, such as `/actuator/health` 
+telling if the service is healthy, and `/actuator/services` introspecting all services, methods, their HTTP route mappings and request/response schema example.
+
 ## Installation
 
 ## Usage
