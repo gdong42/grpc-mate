@@ -19,16 +19,44 @@ running within Kubernetes cluster.
 * **Independent Reverse Proxy** - Runs as an independent proxy server against upstream gRPC service, and evolving of the underlying gRPC service does not require an upgrade or rebuild
 of gRPC Mate server.
 * **Easy to Setup** - Requires only 1) the upstream gRPC server enabling gRPC reflection service, and 2) the gRPC listening address and port passing to gRPC Mate.
-* **Management Endpoint** - Provides basic management endpoints, such as `/actuator/health` 
+* **Management Endpoints** - Provides basic management endpoints, such as `/actuator/health` 
 telling if the service is healthy, and `/actuator/services` introspecting all services, methods, their HTTP route mappings and request/response schema example.
 
 ## Installation
 
+### Build from source
+
+1. Clone this repo
+    ```
+    git clone git@github.com:gdong42/grpc-mate.git
+    ```
+2. Install Go SDK if it's not installed yet, e.g.
+   ```
+   brew install go
+   brew install dep
+   ```
+3. Setup `GOPATH` if not yet, go to grpc-mate dir, install dependencies and build binary
+    ```
+    dep ensure
+    go build -o grpc-mate
+    ```
+Now grpc-mate command is built, following sections show how you configure and run it.
+
 ## Usage
+
+It's really simple to run:
+```
+./grpc-mate
+```
+This by default listens on 6666 as HTTP port, and connects to a local gRPC server running at `localhost:9090`
+
+To connect to other gRPC server host and port, refer to more Environment settings in next section
 
 ## Configuration
 
 ## Contribution
+
+## Credits
 
 ## License
 
