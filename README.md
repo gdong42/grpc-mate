@@ -50,13 +50,25 @@ It's really simple to run:
 ```
 This by default listens on 6666 as HTTP port, and connects to a local gRPC server running at `localhost:9090`
 
-To connect to other gRPC server host and port, refer to more Environment settings in next section
+To connect to other gRPC server host and port, refer to following configuration.
 
 ## Configuration
 
+gRPC Mate is configured via a group of `GRPC_MATE_` prefiexd Environment variables. They are
+
+* `GRPC_MATE_PORT`: the HTTP Port grpc-mate listens on, defaults to 6666
+* `GRPC_MATE_PROXIED_HOST`: the backend gRPC Host grpc-mate connects to, defaults to 127.0.0.1
+* `GRPC_MATE_PROXIED_PORT`: the backend gRPC Port grpc-mate connects to, defaults to 9090
+* `GRPC_MATE_LOG_LEVEL`: the log level, must be INFO, DEBUG, or ERROR, defaults to INFO
+
 ## Contribution
 
+All kinds of contribution are welcome!
+
 ## Credits
+* [mercari/grpc-http-proxy](https://github.com/mercari/grpc-http-proxy) - gRPC Mate project is originally forked from this project. Although going towards different directions in [design decisions](https://github.com/gdong42/grpc-mate/blob/master/DESIGN.md), many coding implementations are borrowed from it.
+* [jhump/protoreflect](https://github.com/jhump/protoreflect) - The main lowlevel building block, which does the heavy lifting.
+* [fullstorydev/grpcurl](https://github.com/fullstorydev/grpcurl) - A useful command line tool to interact with gRPC service, gRPC Mate is also like the HTTP interface of this cli tool. A good example of protoreflect usage mentioned above.
 
 ## License
 

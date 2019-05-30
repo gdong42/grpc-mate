@@ -17,13 +17,13 @@ import (
 // EnvConfig has all Environment variables that grpc-mate reads
 type EnvConfig struct {
 	// Port the HTTP Port grpc-mate listens on, defaults to 6666
-	Port int `envconfig:"PORT" default:"6666"`
+	Port int `envconfig:"GRPC_MATE_PORT" default:"6666"`
 	// GrpcServerHost the backend gRPC Host grpc-mate connects to, defaults to 127.0.0.1
-	GrpcServerHost string `envconfig:"GRPC_SERVER_HOST" default:"127.0.0.1"`
-	// GrpcServerPort the backend gRPC Port grpc-mate connects to
-	GrpcServerPort int `envconfig:"GRPC_SERVER_PORT" default:"9090"`
+	GrpcServerHost string `envconfig:"GRPC_MATE_PROXIED_HOST" default:"127.0.0.1"`
+	// GrpcServerPort the backend gRPC Port grpc-mate connects to, defaults to 9090
+	GrpcServerPort int `envconfig:"GRPC_MATE_PROXIED_PORT" default:"9090"`
 	// LogLevel the log level, must be INFO, DEBUG, or ERROR, defaults to INFO
-	LogLevel string `envconfig:"LOG_LEVEL" default:"INFO"`
+	LogLevel string `envconfig:"GRPC_MATE_LOG_LEVEL" default:"INFO"`
 }
 
 func main() {
