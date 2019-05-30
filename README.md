@@ -72,7 +72,4 @@ All kinds of contribution are welcome!
 
 ## License
 
-
-
-
-
+Apache License 2.0
