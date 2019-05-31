@@ -166,6 +166,10 @@ gRPC Mate is configured via a group of `GRPC_MATE_` prefixed Environment variabl
 * `GRPC_MATE_PROXIED_PORT`: the backend gRPC Port grpc-mate connects to, defaults to 9090
 * `GRPC_MATE_LOG_LEVEL`: the log level, must be INFO, DEBUG, or ERROR, defaults to INFO
 
+## Limitation
+
+Currently, gRPC Mate works with Unary calls only. We are working on support Streaming as well.
+
 ## Contributing
 
 All kinds of contribution are welcome!
