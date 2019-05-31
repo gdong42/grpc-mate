@@ -155,6 +155,8 @@ $ curl -X POST -d '{"name":"gdong42"}' "http://localhost:6600/v1/helloworld.Gree
 ```
 Above we invoked `SayHello` method of `helloworld.Greeter` service, with JSON message of `helloworld.HelloRequest` type, and got a JSON message of `helloworld.HelloReply` type.
 
+Note the HTTP method is POST, the body is a JSON string, and the request path is of pattern `/v1/{serviceName}/{methodName}`.
+
 ## Configuration
 
 gRPC Mate is configured via a group of `GRPC_MATE_` prefixed Environment variables. They are
