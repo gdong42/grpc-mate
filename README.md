@@ -42,19 +42,122 @@ telling if the service is healthy, and `/actuator/services` introspecting all se
     ```
 Now grpc-mate command is built, following sections show how you configure and run it.
 
-## Usage
+## Quick Start
 
-It's really simple to run:
-```
-./grpc-mate
-```
-This by default listens on 6600 as HTTP port, and connects to a local gRPC server running at `localhost:9090`
+### Prerequisites
 
-To connect to other gRPC server host and port, refer to following configuration.
+Make sure [Server Reflection](https://github.com/grpc/grpc/blob/master/doc/server-reflection.md) is enabled on gRPC target server side.
+* For server written in Java, refer to [this guide](https://github.com/grpc/grpc-java/blob/master/documentation/server-reflection-tutorial.md)
+    ```diff
+    --- a/examples/build.gradle
+    +++ b/examples/build.gradle
+    @@ -27,6 +27,7 @@
+    dependencies {
+    compile "io.grpc:grpc-netty-shaded:${grpcVersion}"
+    compile "io.grpc:grpc-protobuf:${grpcVersion}"
+    +  compile "io.grpc:grpc-services:${grpcVersion}"
+    compile "io.grpc:grpc-stub:${grpcVersion}"
+    
+    testCompile "junit:junit:4.12"
+    --- a/examples/src/main/java/io/grpc/examples/helloworld/HelloWorldServer.java
+    +++ b/examples/src/main/java/io/grpc/examples/helloworld/HelloWorldServer.java
+    @@ -33,6 +33,7 @@ package io.grpc.examples.helloworld;
+    
+    import io.grpc.Server;
+    import io.grpc.ServerBuilder;
+    +import io.grpc.protobuf.services.ProtoReflectionService;
+    import io.grpc.stub.StreamObserver;
+    import java.io.IOException;
+    import java.util.logging.Logger;
+    @@ -50,6 +51,7 @@ public class HelloWorldServer {
+        int port = 50051;
+        server = ServerBuilder.forPort(port)
+            .addService(new GreeterImpl())
+    +        .addService(ProtoReflectionService.newInstance())
+            .build()
+            .start();
+        logger.info("Server started, listening on " + port);
+    ```
+* For server written in Go, refer to [this guide](https://github.com/grpc/grpc-go/blob/master/Documentation/server-reflection-tutorial.md)
+    ```diff
+    --- a/examples/helloworld/greeter_server/main.go
+    +++ b/examples/helloworld/greeter_server/main.go
+    @@ -40,6 +40,7 @@ import (
+            "google.golang.org/grpc"
+            pb "google.golang.org/grpc/examples/helloworld/helloworld"
+    +       "google.golang.org/grpc/reflection"
+    )
+
+    const (
+    @@ -61,6 +62,8 @@ func main() {
+            }
+            s := grpc.NewServer()
+            pb.RegisterGreeterServer(s, &server{})
+    +       // Register reflection service on gRPC server.
+    +       reflection.Register(s)
+            if err := s.Serve(lis); err != nil {
+                    log.Fatalf("failed to serve: %v", err)
+            }
+    ```
+
+For demonstration, we start the gRPC example server with reflection enabled provided at https://github.com/grpc/grpc-go/tree/master/examples/features/reflection
+
+```
+$ go run server/main.go
+server listening at [::]:50051
+```
+
+### Run gRPC Mate
+
+It's really simple to run. Let's connect to the gRPC server started above as an example
+```
+$ GRPC_MATE_PROXIED_PORT=50051 ./grpc-mate
+```
+This by default listens on 6600 as HTTP port, and connects to a local gRPC server running at `localhost:50051`
+
+To connect to other gRPC server host and port, refer to the configuration section.
+
+### Introspecting Services
+
+Now try get `http://localhost:6600/actuator/services`, you will see all services the server exposes, as well as their enclosing methods, input and output types, e.g. one element of `services`:
+```
+      {  
+         "name":"helloworld.Greeter",
+         "methods":[  
+            {  
+               "name":"SayHello",
+               "input":"helloworld.HelloRequest",
+               "output":"helloworld.HelloReply",
+               "route":"/helloworld.Greeter/SayHello"
+            }
+         ]
+      }
+```
+ It also has request/response JSON templates, convenient for construcing HTTP and JSON requests, e.g. one element of `types`:
+
+```
+      {  
+         "name":"helloworld.HelloRequest",
+         "template":{  
+            "name":""
+         }
+      }
+
+```
+
+### Making Requests
+
+Now let's try making gRPC requests using above inspected information
+
+```
+$ curl -X POST -d '{"name":"gdong42"}' "http://localhost:6600/v1/helloworld.Greeter/SayHello" 
+{"message":"Hello gdong42"}
+```
+Above we invoked `SayHello` method of `helloworld.Greeter` service, with JSON message of `helloworld.HelloRequest` type, and got a JSON message of `helloworld.HelloReply` type.
 
 ## Configuration
 
-gRPC Mate is configured via a group of `GRPC_MATE_` prefiexd Environment variables. They are
+gRPC Mate is configured via a group of `GRPC_MATE_` prefixed Environment variables. They are
 
 * `GRPC_MATE_PORT`: the HTTP Port grpc-mate listens on, defaults to 6600
 * `GRPC_MATE_PROXIED_HOST`: the backend gRPC Host grpc-mate connects to, defaults to 127.0.0.1
