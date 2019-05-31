@@ -16,8 +16,8 @@ import (
 
 // EnvConfig has all Environment variables that grpc-mate reads
 type EnvConfig struct {
-	// Port the HTTP Port grpc-mate listens on, defaults to 6666
-	Port int `envconfig:"GRPC_MATE_PORT" default:"6666"`
+	// Port the HTTP Port grpc-mate listens on, defaults to 6600
+	Port int `envconfig:"GRPC_MATE_PORT" default:"6600"`
 	// GrpcServerHost the backend gRPC Host grpc-mate connects to, defaults to 127.0.0.1
 	GrpcServerHost string `envconfig:"GRPC_MATE_PROXIED_HOST" default:"127.0.0.1"`
 	// GrpcServerPort the backend gRPC Port grpc-mate connects to, defaults to 9090

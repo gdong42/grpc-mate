@@ -48,7 +48,7 @@ It's really simple to run:
 ```
 ./grpc-mate
 ```
-This by default listens on 6666 as HTTP port, and connects to a local gRPC server running at `localhost:9090`
+This by default listens on 6600 as HTTP port, and connects to a local gRPC server running at `localhost:9090`
 
 To connect to other gRPC server host and port, refer to following configuration.
 
@@ -56,12 +56,12 @@ To connect to other gRPC server host and port, refer to following configuration.
 
 gRPC Mate is configured via a group of `GRPC_MATE_` prefiexd Environment variables. They are
 
-* `GRPC_MATE_PORT`: the HTTP Port grpc-mate listens on, defaults to 6666
+* `GRPC_MATE_PORT`: the HTTP Port grpc-mate listens on, defaults to 6600
 * `GRPC_MATE_PROXIED_HOST`: the backend gRPC Host grpc-mate connects to, defaults to 127.0.0.1
 * `GRPC_MATE_PROXIED_PORT`: the backend gRPC Port grpc-mate connects to, defaults to 9090
 * `GRPC_MATE_LOG_LEVEL`: the log level, must be INFO, DEBUG, or ERROR, defaults to INFO
 
-## Contribution
+## Contributing
 
 All kinds of contribution are welcome!
 
