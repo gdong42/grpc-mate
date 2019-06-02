@@ -18,10 +18,6 @@ type callee struct {
 	Method  string `json:"method"`
 }
 
-func handler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Hi there, I love %s!", r.URL.Path[1:])
-}
-
 // HealthCheckHandler returns a status code 200 response for liveness probes
 func (s *Server) HealthCheckHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
