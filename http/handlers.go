@@ -78,7 +78,7 @@ func (s *Server) RPCCallHandler(client GrpcClient) http.HandlerFunc {
 		}
 
 		// example path and query parameter:
-		// example.com/v1/svc/method?version=v1
+		// example.com/v1/svc/method
 		parts := strings.Split(r.URL.Path, "/")
 		s.logger.Info(fmt.Sprintf("%v", parts))
 		if len(parts) != 4 {
