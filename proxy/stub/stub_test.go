@@ -5,15 +5,14 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/gdong42/grpc-mate/errors"
+	"github.com/gdong42/grpc-mate/metadata"
+	"github.com/gdong42/grpc-mate/proxy/reflection"
+	"github.com/gdong42/grpc-mate/proxy/test"
 	"github.com/jhump/protoreflect/dynamic/grpcdynamic"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	_ "google.golang.org/grpc/test/grpc_testing"
-
-	"github.com/mercari/grpc-http-proxy/errors"
-	"github.com/mercari/grpc-http-proxy/metadata"
-	"github.com/mercari/grpc-http-proxy/proxy/proxytest"
-	"github.com/mercari/grpc-http-proxy/proxy/reflection"
 )
 
 func TestNewStub(t *testing.T) {
@@ -47,11 +46,11 @@ func TestStub_InvokeRPC(t *testing.T) {
 			},
 		},
 	}
-	fileDesc := proxytest.NewFileDescriptor(t, proxytest.File)
+	fileDesc := test.NewFileDescriptor(t, test.File)
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			serviceDesc := reflection.ServiceDescriptorFromFileDescriptor(fileDesc, proxytest.TestService)
+			serviceDesc := reflection.ServiceDescriptorFromFileDescriptor(fileDesc, test.TestService)
 			if serviceDesc == nil {
 				t.Fatal("service descriptor is nil")
 			}
@@ -64,7 +63,7 @@ func TestStub_InvokeRPC(t *testing.T) {
 			ctx := context.Background()
 
 			stub := &stubImpl{
-				stub: &proxytest.FakeGrpcdynamicStub{},
+				stub: &test.MockGrpcdynamicStub{},
 			}
 			invocation := &reflection.MethodInvocation{
 				MethodDescriptor: methodDesc,

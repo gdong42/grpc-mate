@@ -65,10 +65,10 @@ func (r *reflectorImpl) ListServices() ([]string, error) {
 	return r.rc.listServices()
 }
 
-func (r reflectorImpl) DescribeService(serviceName string) ([]*MethodDescriptor, error) {
+func (r *reflectorImpl) DescribeService(serviceName string) ([]*MethodDescriptor, error) {
 	serviceDesc, err := r.rc.resolveService(serviceName)
 	if err != nil {
-		return nil, errors.Wrap(err, "service was not  found upstream even though it should have been there")
+		return nil, errors.Wrap(err, "service was not found upstream even though it should have been there")
 	}
 	methodDescs, err := serviceDesc.GetMethods()
 	if err != nil {
