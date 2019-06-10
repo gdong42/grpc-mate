@@ -9,6 +9,7 @@ import (
 	"google.golang.org/grpc/codes"
 )
 
+// Error wraps an error and provides utilities to get HTTP status code from the error
 type Error interface {
 	error
 	HTTPStatusCode() int

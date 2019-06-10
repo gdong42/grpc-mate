@@ -8,6 +8,7 @@ const metadataHeaderPrefix = "Grpc-Metadata-"
 // Metadata is gRPC metadata sent to and from upstream
 type Metadata map[string][]string
 
+// MetadataFromHeaders extracs headers and convert to Metadata
 func MetadataFromHeaders(raw map[string][]string) Metadata {
 	m := make(map[string][]string, len(raw))
 	for rawK, v := range raw {
@@ -26,6 +27,7 @@ func extractGrpcMetadataKey(rawKey string) string {
 	return strings.TrimPrefix(rawKey, metadataHeaderPrefix)
 }
 
+// ToHeaders converts this Metadata to HTTP headers
 func (m Metadata) ToHeaders() map[string][]string {
 	h := make(map[string][]string, len(m))
 	for k, v := range m {

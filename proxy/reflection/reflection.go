@@ -187,8 +187,8 @@ func (m *MethodDescriptor) AsProtoreflectDescriptor() *desc.MethodDescriptor {
 }
 
 // GetName returns the name of the method.
-func (md *MethodDescriptor) GetName() string {
-	return md.MethodDescriptor.GetName()
+func (m *MethodDescriptor) GetName() string {
+	return m.MethodDescriptor.GetName()
 }
 
 // MessageDescriptor represents a message type
@@ -203,6 +203,7 @@ func (m *MessageDescriptor) NewMessage() *messageImpl {
 	}
 }
 
+// GetFullyQualifiedName returns the fully qualified name of the underlying message
 func (m *MessageDescriptor) GetFullyQualifiedName() string {
 	return m.desc.GetFullyQualifiedName()
 }
@@ -234,6 +235,7 @@ func (m *MessageDescriptor) MakeTemplate(descSource grpcurl.DescriptorSource) (s
 	return str, err
 }
 
+// Message is an simple abstraction of protobuf message
 type Message interface {
 	// MarshalJSON marshals the Message into JSON
 	MarshalJSON() ([]byte, error)

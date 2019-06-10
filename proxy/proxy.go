@@ -65,6 +65,8 @@ func (p *Proxy) Invoke(ctx context.Context,
 	return m, err
 }
 
+// Introspect performs instrospection on this gRPC server, and obtains all services and methods
+// infromation
 func (p *Proxy) Introspect() ([]byte, error) {
 	if !p.IsReady() {
 		return nil, &perrors.ProxyError{
