@@ -63,7 +63,7 @@ func TestReflectorImpl_CreateInvocation(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			fd := test.NewFileDescriptor(t, test.File)
-			r := NewReflector(&test.MockGrpcreflectClient{fd})
+			r := NewReflector(&test.MockGrpcreflectClient{FileDescriptor: fd})
 			i, err := r.CreateInvocation(tc.serviceName, tc.methodName, []byte(tc.message))
 			if got, want := i == nil, tc.invocationIsNil; got != want {
 				t.Fatalf("got %t, want %t", got, want)
@@ -77,7 +77,7 @@ func TestReflectorImpl_CreateInvocation(t *testing.T) {
 
 func TestReflectorImpl_ListServices(t *testing.T) {
 	fd := test.NewFileDescriptor(t, test.File)
-	r := NewReflector(&test.MockGrpcreflectClient{fd})
+	r := NewReflector(&test.MockGrpcreflectClient{FileDescriptor: fd})
 	services, err := r.ListServices()
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -112,7 +112,7 @@ func TestReflectorImpl_DescribeService(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			r := NewReflector(&test.MockGrpcreflectClient{test.NewFileDescriptor(t, test.File)})
+			r := NewReflector(&test.MockGrpcreflectClient{FileDescriptor: test.NewFileDescriptor(t, test.File)})
 			methodDescs, err := r.DescribeService(tc.serviceName)
 
 			if got, want := len(methodDescs), tc.methodsLen; got != want {
@@ -150,7 +150,7 @@ func TestReflectionClient_ResolveService(t *testing.T) {
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			c := newReflectionClient(&test.MockGrpcreflectClient{test.NewFileDescriptor(t, test.File)})
+			c := newReflectionClient(&test.MockGrpcreflectClient{FileDescriptor: test.NewFileDescriptor(t, test.File)})
 			serviceDesc, err := c.resolveService(tc.serviceName)
 			if got, want := serviceDesc == nil, tc.descIsNil; got != want {
 				t.Fatalf("got %t, want %t", got, want)
