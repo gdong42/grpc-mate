@@ -1,6 +1,7 @@
 # gRPC Mate
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/gdong42/grpc-mate)](https://goreportcard.com/report/github.com/gdong42/grpc-mate)
+[![Build Status](https://travis-ci.com/gdong42/grpc-mate.svg?branch=master)](https://travis-ci.com/gdong42/grpc-mate)
 
 gRPC Mate is a light weight reverse proxy server that translates JSON HTTP requests into gRPC calls without the need of 
 code generation. It reads protobuf service definitions through accessing reflection API exposed by the gRPC service, 
