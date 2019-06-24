@@ -1,4 +1,6 @@
 language: go
+services:
+  - docker
 
 go:
 - 1.12.x
@@ -12,4 +14,5 @@ before_install:
 
 install:
   - dep ensure -v --vendor-only
+  - docker build -t gdong42/grpc-mate .
 
