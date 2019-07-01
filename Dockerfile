@@ -6,7 +6,7 @@ ADD ./Gopkg.* $D/
 RUN cd $D && dep ensure -v --vendor-only
 # build
 ADD . $D/
-RUN go build -o grpc-mate && cp grpc-mate /tmp/
+RUN cd $D && go build -o grpc-mate && cp grpc-mate /tmp/
 
 FROM alpine
 RUN apk --no-cache add ca-certificates
