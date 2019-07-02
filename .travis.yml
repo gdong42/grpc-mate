@@ -1,4 +1,6 @@
 language: go
+services:
+  - docker
 
 go:
 - 1.12.x
@@ -9,7 +11,16 @@ env:
 before_install:
   - curl -L -s https://github.com/golang/dep/releases/download/v${DEP_VERSION}/dep-linux-amd64 -o $GOPATH/bin/dep
   - chmod +x $GOPATH/bin/dep
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 
 install:
   - dep ensure -v --vendor-only
+  - docker build -t gdong/grpc-mate .
+  - docker tag gdong/grpc-mate:latest gdong/grpc-mate:0.1
+
+deploy:
+  provider: script
+  script: docker push gdong/grpc-mate
+  on:
+    branch: master
 
