@@ -16,7 +16,7 @@ before_install:
 install:
   - dep ensure -v --vendor-only
   - docker build -t gdong/grpc-mate .
-  - docker tag gdong/grpc-mate:0.1
+  - docker tag gdong/grpc-mate:latest gdong/grpc-mate:0.1
 
 deploy:
   provider: script
