@@ -30,6 +30,8 @@ telling if the service is healthy, and `/actuator/services` introspecting all se
 
 ## Installation
 
+It's recommended to use pre-built docker image `gdong/grpc-mate` directly. You can also choose to build from source.
+
 ### Build from source
 
 1. Clone this repo
@@ -115,7 +117,17 @@ server listening at [::]:50051
 
 ### Run gRPC Mate
 
-It's really simple to run. Let's connect to the gRPC server started above as an example
+It's really simple to run. Let's connect to the gRPC server started above as an example, using docker or command built from source.
+
+#### Run gRPC Mate via Docker
+
+```
+$ docker run --name grpc-mate -e GRPC_MATE_PROXIED_HOST=<your grpc server local IP> -e GRPC_MATE_PROXIED_PORT=50051 -dp 6600:6600 gdong/grpc-mate
+```
+
+Note above `GRPC_MATE_PROXIED_HOST` has to be set to your IP address other than localhost, so that grpc-mate running inside docker can access it.
+
+#### Run gRPC Mate directly
 ```
 $ GRPC_MATE_PROXIED_PORT=50051 ./grpc-mate
 ```
