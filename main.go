@@ -1,6 +1,8 @@
 package main
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"net"
 	"os"
@@ -12,6 +14,7 @@ import (
 	"github.com/gdong42/grpc-mate/log"
 	"github.com/kelseyhightower/envconfig"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 // EnvConfig has all Environment variables that grpc-mate reads
@@ -22,6 +25,8 @@ type EnvConfig struct {
 	GrpcServerHost string `envconfig:"GRPC_MATE_PROXIED_HOST" default:"127.0.0.1"`
 	// GrpcServerPort the backend gRPC Port grpc-mate connects to, defaults to 9090
 	GrpcServerPort int `envconfig:"GRPC_MATE_PROXIED_PORT" default:"9090"`
+	// GrpcServerTLS enables verified TLS to the backend, defaults to false
+	GrpcServerTLS bool `envconfig:"GRPC_MATE_PROXIED_TLS" default:"false"`
 	// LogLevel the log level, must be INFO, DEBUG, or ERROR, defaults to INFO
 	LogLevel string `envconfig:"GRPC_MATE_LOG_LEVEL" default:"INFO"`
 }
@@ -43,7 +48,7 @@ func main() {
 	grpcAddr := fmt.Sprintf("%s:%d", env.GrpcServerHost, env.GrpcServerPort)
 	logger.Info("Connecting to gRPC service...", zap.String("grpc_addr", grpcAddr))
 
-	conn, err := grpc.Dial(grpcAddr, grpc.WithInsecure())
+	conn, err := grpc.Dial(grpcAddr, upstreamTransport(env.GrpcServerTLS, nil))
 	if err != nil {
 		logger.Fatal("Could not connect to gRPC service", zap.String("grpc_addr", grpcAddr))
 	}
@@ -64,4 +69,13 @@ func main() {
 		os.Exit(1)
 	}
 	s.Serve(ln)
+}
+
+// upstreamTransport preserves plaintext by default. With TLS enabled, nil RootCAs
+// uses system roots and gRPC derives the verified server name from the target.
+func upstreamTransport(useTLS bool, roots *x509.CertPool) grpc.DialOption {
+	if useTLS {
+		return grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{RootCAs: roots}))
+	}
+	return grpc.WithInsecure()
 }

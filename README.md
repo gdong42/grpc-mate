@@ -182,7 +182,14 @@ gRPC Mate is configured via a group of `GRPC_MATE_` prefixed Environment variabl
 * `GRPC_MATE_PORT`: the HTTP Port grpc-mate listens on, defaults to 6600
 * `GRPC_MATE_PROXIED_HOST`: the backend gRPC Host grpc-mate connects to, defaults to 127.0.0.1
 * `GRPC_MATE_PROXIED_PORT`: the backend gRPC Port grpc-mate connects to, defaults to 9090
+* `GRPC_MATE_PROXIED_TLS`: enable TLS to the backend gRPC server, defaults to false (plaintext). TLS uses system CA certificates and verifies the backend hostname; verification failures never fall back to plaintext.
 * `GRPC_MATE_LOG_LEVEL`: the log level, must be INFO, DEBUG, or ERROR, defaults to INFO
+
+For a TLS-enabled backend with a certificate trusted by the system CA store:
+
+```
+GRPC_MATE_PROXIED_HOST=grpc.example.com GRPC_MATE_PROXIED_PORT=443 GRPC_MATE_PROXIED_TLS=true ./grpc-mate
+```
 
 ## Limitation
 
