@@ -183,6 +183,7 @@ gRPC Mate is configured via a group of `GRPC_MATE_` prefixed Environment variabl
 * `GRPC_MATE_PROXIED_HOST`: the backend gRPC Host grpc-mate connects to, defaults to 127.0.0.1
 * `GRPC_MATE_PROXIED_PORT`: the backend gRPC Port grpc-mate connects to, defaults to 9090
 * `GRPC_MATE_PROXIED_TLS_ENABLED`: enable TLS to the backend gRPC server, defaults to false (plaintext). TLS uses system CA certificates and verifies the backend hostname; verification failures never fall back to plaintext.
+* `GRPC_MATE_PROXIED_TLS_CA_FILE`: optional PEM CA bundle appended to system CAs; requires TLS enabled. Unreadable files or bundles without valid certificates fail startup.
 * `GRPC_MATE_LOG_LEVEL`: the log level, must be INFO, DEBUG, or ERROR, defaults to INFO
 
 For a TLS-enabled backend with a certificate trusted by the system CA store:
@@ -190,6 +191,16 @@ For a TLS-enabled backend with a certificate trusted by the system CA store:
 ```
 GRPC_MATE_PROXIED_HOST=grpc.example.com GRPC_MATE_PROXIED_PORT=443 GRPC_MATE_PROXIED_TLS_ENABLED=true ./grpc-mate
 ```
+
+Public CA certificates normally need no CA file. For a private CA in Docker, mount the bundle read-only and use its **container path** (the image must include TLS support):
+
+```
+docker run -p 6600:6600 --mount type=bind,src=/absolute/path/company-ca.pem,dst=/certs/company-ca.pem,readonly \
+  -e GRPC_MATE_PROXIED_HOST=grpc.internal.example -e GRPC_MATE_PROXIED_PORT=443 \
+  -e GRPC_MATE_PROXIED_TLS_ENABLED=true -e GRPC_MATE_PROXIED_TLS_CA_FILE=/certs/company-ca.pem gdong/grpc-mate
+```
+
+A Kubernetes volume can supply the same readable file. The CA bundle adds trust without modifying the system store; hostname verification still applies. Client certificates/mTLS are not supported.
 
 ## Limitation
 
