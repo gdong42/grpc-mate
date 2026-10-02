@@ -132,7 +132,7 @@ func (e *GRPCError) HTTPStatusCode() int {
 	case codes.Unauthenticated:
 		return http.StatusUnauthorized
 	case codes.ResourceExhausted:
-		return http.StatusServiceUnavailable
+		return http.StatusTooManyRequests
 	case codes.FailedPrecondition:
 		return http.StatusPreconditionFailed
 	case codes.Aborted:

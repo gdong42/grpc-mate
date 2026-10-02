@@ -109,7 +109,7 @@ func TestGRPCError_HTTPStatusCode(t *testing.T) {
 		},
 		{
 			codes.ResourceExhausted,
-			http.StatusServiceUnavailable,
+			http.StatusTooManyRequests,
 		},
 		{
 			codes.FailedPrecondition,
