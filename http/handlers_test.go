@@ -6,15 +6,21 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"testing"
 
+	perrors "github.com/gdong42/grpc-mate/errors"
 	"github.com/gdong42/grpc-mate/metadata"
+	any "github.com/golang/protobuf/ptypes/any"
+	"github.com/pkg/errors"
 	"go.uber.org/zap"
+	"google.golang.org/grpc/codes"
 )
 
 type mockClient struct {
-	isReady bool
+	isReady   bool
+	invokeErr error
 }
 
 func (c *mockClient) IsReady() bool {
@@ -27,6 +33,9 @@ func (c *mockClient) Invoke(ctx context.Context,
 	message []byte,
 	md *metadata.Metadata,
 ) ([]byte, error) {
+	if c.invokeErr != nil {
+		return nil, c.invokeErr
+	}
 	response := fmt.Sprintf(`{"service":"%s","method":"%s"}`,
 		serviceName,
 		methodName)
@@ -209,5 +218,39 @@ func TestRPCCallHandlerSuccess(t *testing.T) {
 	actualMethod, ok := actual["method"]
 	if !ok || actualMethod != "method1" {
 		t.Errorf("handler did not returns expected value [method1] for body key: method, got %v", actualMethod)
+	}
+}
+
+func TestRPCCallHandlerGRPCErrors(t *testing.T) {
+	cases := []struct {
+		code       codes.Code
+		httpStatus int
+	}{
+		{codes.ResourceExhausted, http.StatusTooManyRequests},
+		{codes.Unavailable, http.StatusServiceUnavailable},
+	}
+	for _, tc := range cases {
+		t.Run(tc.code.String(), func(t *testing.T) {
+			upstreamErr := &perrors.GRPCError{
+				StatusCode: int(tc.code),
+				Message:    "upstream limit reached",
+				Details:    []*any.Any{{TypeUrl: "type.googleapis.com/google.rpc.RetryInfo", Value: []byte{8, 1}}},
+			}
+			client := &mockClient{isReady: true, invokeErr: errors.Wrap(upstreamErr, "invoke failed")}
+			server := New(client, zap.NewNop())
+			req := httptest.NewRequest(http.MethodPost, "/v1/svc1/method1", strings.NewReader(`{}`))
+			rr := httptest.NewRecorder()
+			server.RPCCallHandler(client).ServeHTTP(rr, req)
+			if rr.Code != tc.httpStatus {
+				t.Errorf("HTTP status: got %d, want %d", rr.Code, tc.httpStatus)
+			}
+			var actual perrors.GRPCError
+			if err := json.Unmarshal(rr.Body.Bytes(), &actual); err != nil {
+				t.Fatalf("invalid JSON response: %v", err)
+			}
+			if !reflect.DeepEqual(&actual, upstreamErr) {
+				t.Errorf("gRPC error body: got %+v, want %+v", &actual, upstreamErr)
+			}
+		})
 	}
 }
