@@ -26,7 +26,7 @@ type EnvConfig struct {
 	// GrpcServerPort the backend gRPC Port grpc-mate connects to, defaults to 9090
 	GrpcServerPort int `envconfig:"GRPC_MATE_PROXIED_PORT" default:"9090"`
 	// GrpcServerTLS enables verified TLS to the backend, defaults to false
-	GrpcServerTLS bool `envconfig:"GRPC_MATE_PROXIED_TLS" default:"false"`
+	GrpcServerTLS bool `envconfig:"GRPC_MATE_PROXIED_TLS_ENABLED" default:"false"`
 	// LogLevel the log level, must be INFO, DEBUG, or ERROR, defaults to INFO
 	LogLevel string `envconfig:"GRPC_MATE_LOG_LEVEL" default:"INFO"`
 }

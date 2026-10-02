@@ -34,12 +34,12 @@ func (*upstreamTestServer) EmptyCall(context.Context, *pb.Empty) (*pb.Empty, err
 }
 
 func TestTLSConfiguration(t *testing.T) {
-	old, exists := os.LookupEnv("GRPC_MATE_PROXIED_TLS")
+	old, exists := os.LookupEnv("GRPC_MATE_PROXIED_TLS_ENABLED")
 	defer func() {
 		if exists {
-			os.Setenv("GRPC_MATE_PROXIED_TLS", old)
+			os.Setenv("GRPC_MATE_PROXIED_TLS_ENABLED", old)
 		} else {
-			os.Unsetenv("GRPC_MATE_PROXIED_TLS")
+			os.Unsetenv("GRPC_MATE_PROXIED_TLS_ENABLED")
 		}
 	}()
 	for _, tc := range []struct {
@@ -49,9 +49,9 @@ func TestTLSConfiguration(t *testing.T) {
 		{unset: true}, {value: "false"}, {value: "true", want: true}, {value: "invalid", invalid: true},
 	} {
 		if tc.unset {
-			os.Unsetenv("GRPC_MATE_PROXIED_TLS")
+			os.Unsetenv("GRPC_MATE_PROXIED_TLS_ENABLED")
 		} else {
-			os.Setenv("GRPC_MATE_PROXIED_TLS", tc.value)
+			os.Setenv("GRPC_MATE_PROXIED_TLS_ENABLED", tc.value)
 		}
 		var env EnvConfig
 		err := envconfig.Process("", &env)
