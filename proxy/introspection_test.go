@@ -23,6 +23,15 @@ func (r *introspectionReflector) DescribeService(name string) ([]*reflection.Met
 	if name == "example.Empty" {
 		return nil, nil
 	}
+	if name == "example.Second" {
+		var selected []*reflection.MethodDescriptor
+		for _, m := range r.methods {
+			if m.GetName() == "UnaryCall" || m.GetName() == "EmptyCall" {
+				selected = append(selected, m)
+			}
+		}
+		return selected, nil
+	}
 	return r.methods, nil
 }
 
@@ -46,7 +55,7 @@ func TestIntrospectionFilters(t *testing.T) {
 	if err := json.Unmarshal(allJSON, &all); err != nil {
 		t.Fatal(err)
 	}
-	if len(all.Services) != 3 || len(all.Types) != 7 || len(all.Services[0].Methods) != 6 || len(all.Services[1].Methods) != 6 || len(all.Services[2].Methods) != 0 {
+	if len(all.Services) != 3 || len(all.Types) != 7 || len(all.Services[0].Methods) != 6 || len(all.Services[1].Methods) != 2 || len(all.Services[2].Methods) != 0 {
 		t.Fatalf("unfiltered response lost services, methods or types: %s", allJSON)
 	}
 	allTypes := make(map[string]*typeElement)
@@ -57,8 +66,9 @@ func TestIntrospectionFilters(t *testing.T) {
 		label, name, method      string
 		services, methods, types int
 	}{
-		{"no query", "", "", 3, len(methods) * 2, len(allTypes)},
+		{"no query", "", "", 3, len(methods) + 2, len(allTypes)},
 		{"service", "example.First", "", 1, len(methods), len(allTypes)},
+		{"service excludes unrelated types", "example.Second", "", 1, 2, 3},
 		{"method across services", "", "UnaryCall", 2, 2, 2},
 		{"both", "example.Second", "UnaryCall", 1, 1, 2},
 		{"same input and output", "", "EmptyCall", 2, 2, 1},
