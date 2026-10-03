@@ -7,7 +7,10 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/jhump/protoreflect/desc"
 	"github.com/jhump/protoreflect/dynamic"
+	"github.com/jhump/protoreflect/grpcreflect"
 	"github.com/pkg/errors"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	perrors "github.com/gdong42/grpc-mate/errors"
 )
@@ -44,7 +47,7 @@ func (r *reflectorImpl) CreateInvocation(serviceName,
 ) (*MethodInvocation, error) {
 	serviceDesc, err := r.rc.resolveService(serviceName)
 	if err != nil {
-		return nil, errors.Wrap(err, "service was not found upstream even though it should have been there")
+		return nil, errors.Wrap(err, "failed to resolve upstream service")
 	}
 	methodDesc, err := serviceDesc.FindMethodByName(methodName)
 	if err != nil {
@@ -68,7 +71,7 @@ func (r *reflectorImpl) ListServices() ([]string, error) {
 func (r *reflectorImpl) DescribeService(serviceName string) ([]*MethodDescriptor, error) {
 	serviceDesc, err := r.rc.resolveService(serviceName)
 	if err != nil {
-		return nil, errors.Wrap(err, "service was not found upstream even though it should have been there")
+		return nil, errors.Wrap(err, "failed to resolve upstream service")
 	}
 	methodDescs, err := serviceDesc.GetMethods()
 	if err != nil {
@@ -98,10 +101,13 @@ func newReflectionClient(rc grpcreflectClient) *reflectionClient {
 func (c *reflectionClient) resolveService(serviceName string) (*ServiceDescriptor, error) {
 	d, err := c.grpcreflectClient.ResolveService(serviceName)
 	if err != nil {
-		return nil, &perrors.ProxyError{
-			Code:    perrors.ServiceNotFound,
-			Message: fmt.Sprintf("service %s was not found upstream", serviceName),
+		if grpcreflect.IsElementNotFoundError(errors.Cause(err)) || status.Code(errors.Cause(err)) == codes.NotFound {
+			return nil, &perrors.ProxyError{
+				Code:    perrors.ServiceNotFound,
+				Message: fmt.Sprintf("service %s was not found upstream", serviceName),
+			}
 		}
+		return nil, reflectionError(err)
 	}
 	return &ServiceDescriptor{
 		ServiceDescriptor: d,
@@ -111,12 +117,28 @@ func (c *reflectionClient) resolveService(serviceName string) (*ServiceDescripto
 func (c *reflectionClient) listServices() ([]string, error) {
 	d, err := c.grpcreflectClient.ListServices()
 	if err != nil {
-		return nil, &perrors.ProxyError{
-			Code:    perrors.ServiceNotFound,
-			Message: fmt.Sprintf("listing service failed: %v", err),
-		}
+		return nil, reflectionError(err)
 	}
 	return d, nil
+}
+
+// reflectionError translates only reflection failures, never application RPC errors.
+func reflectionError(err error) error {
+	stat, ok := status.FromError(errors.Cause(err))
+	if !ok {
+		return &perrors.ProxyError{Code: perrors.Unknown, Message: fmt.Sprintf("upstream server reflection failed: %v", err)}
+	}
+	switch stat.Code() {
+	case codes.Unimplemented:
+		return &perrors.ProxyError{
+			Code:    perrors.ReflectionUnavailable,
+			Message: "upstream gRPC server does not support server reflection; enable server reflection on the upstream server",
+		}
+	case codes.Unavailable:
+		return &perrors.ProxyError{Code: perrors.UpstreamConnFailure, Message: fmt.Sprintf("could not connect to backend gRPC reflection service: %s", stat.Message())}
+	default:
+		return &perrors.GRPCError{StatusCode: int(stat.Code()), Message: stat.Message(), Details: stat.Proto().Details}
+	}
 }
 
 // ServiceDescriptor represents a service type

@@ -54,6 +54,8 @@ Now grpc-mate command is built, following sections show how you configure and ru
 
 ### Prerequisites
 
+If upstream reflection is unimplemented, RPC requests and `/actuator/services` return HTTP 502 with guidance to enable it. Missing services remain distinct from reflection permission or connection failures.
+
 Make sure [Server Reflection](https://github.com/grpc/grpc/blob/master/doc/server-reflection.md) is enabled on gRPC target server side.
 * For server written in Java, refer to [this guide](https://github.com/grpc/grpc-java/blob/master/documentation/server-reflection-tutorial.md)
     ```diff

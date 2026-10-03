@@ -55,7 +55,7 @@ type MockGrpcreflectClient struct {
 // ResolveService is a mock that returns TestService from test.proto
 func (c *MockGrpcreflectClient) ResolveService(serviceName string) (*desc.ServiceDescriptor, error) {
 	if serviceName != TestService {
-		return nil, errors.Errorf("service not found")
+		return nil, status.Error(codes.NotFound, "service not found")
 	}
 	return c.FileDescriptor.FindService(serviceName), nil
 }

@@ -43,11 +43,15 @@ const (
 	VersionNotSpecified Code = 7
 	// VersionUndecidable represents there being multiple upstreams that match the specified (service, version) pair
 	VersionUndecidable Code = 8
+	// ReflectionUnavailable represents an upstream without server reflection support.
+	ReflectionUnavailable Code = 9
 )
 
 // Error satisfies the error interface
 func (e *ProxyError) Error() string {
 	switch e.Code {
+	case ReflectionUnavailable:
+		return "upstream server reflection is unavailable"
 	case UpstreamConnFailure:
 		return "could not connect to backend gRPC service"
 	case ServiceUnresolvable:
@@ -70,7 +74,7 @@ func (e *ProxyError) Error() string {
 // HTTPStatusCode returns the HTTP status code for a internal error
 func (e *ProxyError) HTTPStatusCode() int {
 	switch e.Code {
-	case UpstreamConnFailure:
+	case UpstreamConnFailure, ReflectionUnavailable:
 		return http.StatusBadGateway
 	case ServiceUnresolvable:
 		return http.StatusNotFound
