@@ -19,6 +19,7 @@ jobs:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
         with:
           go-version: '1.12.5'
@@ -34,10 +35,44 @@ jobs:
           go test -count=1 ./...
           go build -o grpc-mate .
       - name: Build complete Dockerfile
-        run: docker build --pull --no-cache --platform linux/amd64 --progress plain -t grpc-mate:ci .
-      - name: Verify container TLS and read-only CA mount
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/image-results"
+          docker build --pull --no-cache --platform linux/amd64 --progress plain \
+            --label org.opencontainers.image.source=https://github.com/gdong42/grpc-mate \
+            --label org.opencontainers.image.revision="$(git rev-parse HEAD)" \
+            -t grpc-mate:ci . 2>&1 | tee "$RUNNER_TEMP/image-results/build.log"
+      - name: Verify complete image smoke tests
+        shell: bash
         env:
           GRPC_MATE_CONTAINER_IMAGE: grpc-mate:ci
         run: |
           cd "$GOPATH/src/github.com/gdong42/grpc-mate"
-          go test -count=1 -run '^TestContainerTLS$' -v .
+          go test -count=1 -run '^TestContainer' -v . 2>&1 | tee "$RUNNER_TEMP/image-results/smoke-tests.log"
+      - name: Export tested candidate and provenance
+        shell: bash
+        run: |
+          out="$RUNNER_TEMP/image-results"
+          test "$(docker image inspect --format '{{.Os}}/{{.Architecture}}' grpc-mate:ci)" = linux/amd64
+          test "$(docker image inspect --format '{{index .Config.Labels "org.opencontainers.image.revision"}}' grpc-mate:ci)" = "$(git rev-parse HEAD)"
+          docker image inspect grpc-mate:ci > "$out/image-inspect.json"
+          docker run --rm --entrypoint sh grpc-mate:ci -c 'apk info -v; test -s /etc/ssl/certs/ca-certificates.crt' > "$out/runtime-packages.txt"
+          docker save grpc-mate:ci | gzip -n > "$out/grpc-mate-linux-amd64.tar.gz"
+          {
+            echo "source_commit=$(git rev-parse HEAD)"
+            echo "source_tree=$(git rev-parse HEAD^{tree})"
+            echo "platform=linux/amd64"
+            echo "image_id=$(docker image inspect --format '{{.Id}}' grpc-mate:ci)"
+            echo "workflow_run=https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            echo 'registry_published=false'
+          } > "$out/provenance.txt"
+          (cd "$out" && sha256sum grpc-mate-linux-amd64.tar.gz > SHA256SUMS)
+          cat "$out/provenance.txt" >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload candidate and build evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: container-candidate-linux-amd64
+          path: ${{ runner.temp }}/image-results/
+          if-no-files-found: warn
+          retention-days: 14
