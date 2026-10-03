@@ -21,6 +21,12 @@ type GrpcClient interface {
 	Introspect() (response []byte, err error)
 }
 
+// FilteredIntrospector is an optional capability for exact introspection filters.
+// With both filters empty, it must be equivalent to Introspect.
+type FilteredIntrospector interface {
+	IntrospectFiltered(name, method string) (response []byte, err error)
+}
+
 // Server is a grpc-mate server
 type Server struct {
 	router     *http.ServeMux

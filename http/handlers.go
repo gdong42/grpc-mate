@@ -45,7 +45,18 @@ func (s *Server) IntrospectHandler(client GrpcClient) http.HandlerFunc {
 			w.WriteHeader(http.StatusBadGateway)
 			return
 		}
-		response, err := client.Introspect()
+		query := r.URL.Query()
+		name, method := query.Get("name"), query.Get("method")
+		var response []byte
+		var err error
+		if filtered, ok := client.(FilteredIntrospector); ok {
+			response, err = filtered.IntrospectFiltered(name, method)
+		} else if name == "" && method == "" {
+			response, err = client.Introspect()
+		} else {
+			http.Error(w, "introspection filters are not supported by this client", http.StatusNotImplemented)
+			return
+		}
 		if err != nil {
 			returnError(w, errors.Cause(err).(perrors.Error))
 			s.logger.Error("error in introspection",

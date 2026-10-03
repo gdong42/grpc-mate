@@ -19,8 +19,9 @@ import (
 )
 
 type mockClient struct {
-	isReady   bool
-	invokeErr error
+	isReady         bool
+	invokeErr       error
+	introspectCalls int
 }
 
 func (c *mockClient) IsReady() bool {
@@ -43,6 +44,7 @@ func (c *mockClient) Invoke(ctx context.Context,
 }
 
 func (c *mockClient) Introspect() ([]byte, error) {
+	c.introspectCalls++
 	response := `{"services":[{
 		"name": "helloworld.Greeter",
 		"methods": []
@@ -250,6 +252,80 @@ func TestRPCCallHandlerGRPCErrors(t *testing.T) {
 			}
 			if !reflect.DeepEqual(&actual, upstreamErr) {
 				t.Errorf("gRPC error body: got %+v, want %+v", &actual, upstreamErr)
+			}
+		})
+	}
+}
+
+// This mock intentionally implements only the original GrpcClient methods.
+var _ GrpcClient = (*mockClient)(nil)
+
+type filteredMockClient struct {
+	mockClient
+	name, method  string
+	filteredCalls int
+}
+
+var _ FilteredIntrospector = (*filteredMockClient)(nil)
+
+func (c *filteredMockClient) IntrospectFiltered(name, method string) ([]byte, error) {
+	c.name, c.method = name, method
+	c.filteredCalls++
+	return []byte(`{"services":[],"types":[]}`), nil
+}
+
+func TestLegacyIntrospectionClient(t *testing.T) {
+	legacy := &mockClient{isReady: true}
+	var client GrpcClient = legacy
+	expected, err := client.Introspect()
+	if err != nil || legacy.introspectCalls != 1 {
+		t.Fatalf("original interface introspection failed: calls=%d, err=%v", legacy.introspectCalls, err)
+	}
+	if _, ok := client.(FilteredIntrospector); ok {
+		t.Fatal("legacy fixture must not implement filtered introspection")
+	}
+	for _, query := range []string{"", "?name=&method=", "?unrelated=value"} {
+		t.Run(query, func(t *testing.T) {
+			before := legacy.introspectCalls
+			server := New(client, zap.NewNop())
+			rr := httptest.NewRecorder()
+			server.router.ServeHTTP(rr, httptest.NewRequest(http.MethodGet, "/actuator/services"+query, nil))
+			if rr.Code != http.StatusOK || rr.Body.String() != string(expected) || rr.Header().Get("Content-Type") != "application/json" || legacy.introspectCalls != before+1 {
+				t.Fatalf("unfiltered legacy request changed: status=%d, body=%s, calls=%d", rr.Code, rr.Body.String(), legacy.introspectCalls)
+			}
+		})
+	}
+	for _, query := range []string{"?name=example.Greeter", "?method=SayHello", "?name=example.Greeter&method=SayHello"} {
+		t.Run(query, func(t *testing.T) {
+			before := legacy.introspectCalls
+			server := New(client, zap.NewNop())
+			rr := httptest.NewRecorder()
+			server.router.ServeHTTP(rr, httptest.NewRequest(http.MethodGet, "/actuator/services"+query, nil))
+			if rr.Code != http.StatusNotImplemented || !strings.Contains(rr.Body.String(), "filters are not supported") || legacy.introspectCalls != before {
+				t.Fatalf("unsupported filter did not fail explicitly: status=%d, body=%s, calls=%d", rr.Code, rr.Body.String(), legacy.introspectCalls)
+			}
+		})
+	}
+}
+
+func TestIntrospectHandlerFilters(t *testing.T) {
+	for _, tc := range []struct{ query, name, method string }{
+		{"", "", ""},
+		{"?name=example.Greeter", "example.Greeter", ""},
+		{"?method=SayHello", "", "SayHello"},
+		{"?name=example.Greeter&method=SayHello", "example.Greeter", "SayHello"},
+		{"?name=&method=", "", ""},
+	} {
+		t.Run(tc.query, func(t *testing.T) {
+			client := &filteredMockClient{mockClient: mockClient{isReady: true}}
+			server := New(client, zap.NewNop())
+			rr := httptest.NewRecorder()
+			server.router.ServeHTTP(rr, httptest.NewRequest(http.MethodGet, "/actuator/services"+tc.query, nil))
+			if rr.Code != http.StatusOK || client.name != tc.name || client.method != tc.method {
+				t.Fatalf("status=%d, filters=(%q, %q), want (200, %q, %q)", rr.Code, client.name, client.method, tc.name, tc.method)
+			}
+			if client.filteredCalls != 1 || client.introspectCalls != 0 {
+				t.Errorf("filtered/plain calls=%d/%d, want 1/0", client.filteredCalls, client.introspectCalls)
 			}
 		})
 	}

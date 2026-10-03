@@ -68,39 +68,59 @@ func (p *Proxy) Invoke(ctx context.Context,
 // Introspect performs instrospection on this gRPC server, and obtains all services and methods
 // information
 func (p *Proxy) Introspect() ([]byte, error) {
+	return p.IntrospectFiltered("", "")
+}
+
+// IntrospectFiltered returns exact service and method matches. Empty filters match all.
+func (p *Proxy) IntrospectFiltered(name, method string) ([]byte, error) {
 	if !p.IsReady() {
 		return nil, &perrors.ProxyError{
 			Code:    perrors.UpstreamConnFailure,
 			Message: "service down",
 		}
 	}
+	return p.introspect(name, method)
+}
+
+func (p *Proxy) introspect(name, method string) ([]byte, error) {
 	s, err := p.reflector.ListServices()
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to list services")
 	}
-	ses := make([]*serviceElement, len(s))
+	ses := make([]*serviceElement, 0, len(s))
 	// typeDscs holds a message name to MessageDescriptor mappings without duplicates
 	typeDscs := make(map[string]*reflection.MessageDescriptor)
 	r := &IntrospectionResponse{
 		Services: ses,
 	}
-	for i, svc := range s {
+	for _, svc := range s {
+		if name != "" && svc != name {
+			continue
+		}
 		mds, err := p.reflector.DescribeService(svc)
 		if err != nil {
 			return nil, err
 		}
-		methods := make([]*methodElement, len(mds))
-		for j, m := range mds {
-			methods[j] = resolveMethodElement(svc, m, typeDscs)
+		methods := make([]*methodElement, 0, len(mds))
+		for _, m := range mds {
+			if method == "" || m.GetName() == method {
+				methods = append(methods, resolveMethodElement(svc, m, typeDscs))
+			}
+		}
+		if method != "" && len(methods) == 0 {
+			continue
 		}
 		se := &serviceElement{
 			Name:    svc,
 			Methods: methods,
 		}
-		r.Services[i] = se
+		r.Services = append(r.Services, se)
 	}
 
 	var types []*typeElement
+	if name != "" || method != "" {
+		types = make([]*typeElement, 0, len(typeDscs))
+	}
 	for k, v := range typeDscs {
 		te, err := resolveTypeElement(k, v, p.descSource)
 		if err != nil {
