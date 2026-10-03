@@ -1,7 +1,7 @@
 # gRPC Mate
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/gdong42/grpc-mate)](https://goreportcard.com/report/github.com/gdong42/grpc-mate)
-[![Build Status](https://travis-ci.com/gdong42/grpc-mate.svg?branch=master)](https://travis-ci.com/gdong42/grpc-mate)
+[![CI](https://github.com/gdong42/grpc-mate/actions/workflows/ci.yml/badge.svg)](https://github.com/gdong42/grpc-mate/actions/workflows/ci.yml)
 [![Docker Pulls](https://img.shields.io/docker/pulls/gdong/grpc-mate.svg)](https://hub.docker.com/r/gdong/grpc-mate)
 [![MicroBadger Size (tag)](https://img.shields.io/microbadger/image-size/gdong/grpc-mate/latest.svg)](https://hub.docker.com/r/gdong/grpc-mate)
 [![Docker Image](https://images.microbadger.com/badges/version/gdong/grpc-mate.svg)](https://hub.docker.com/r/gdong/grpc-mate)
@@ -182,7 +182,25 @@ gRPC Mate is configured via a group of `GRPC_MATE_` prefixed Environment variabl
 * `GRPC_MATE_PORT`: the HTTP Port grpc-mate listens on, defaults to 6600
 * `GRPC_MATE_PROXIED_HOST`: the backend gRPC Host grpc-mate connects to, defaults to 127.0.0.1
 * `GRPC_MATE_PROXIED_PORT`: the backend gRPC Port grpc-mate connects to, defaults to 9090
+* `GRPC_MATE_PROXIED_TLS_ENABLED`: enable TLS to the backend gRPC server, defaults to false (plaintext). TLS uses system CA certificates and verifies the backend hostname; verification failures never fall back to plaintext.
+* `GRPC_MATE_PROXIED_TLS_CA_FILE`: optional PEM CA bundle appended to system CAs; requires TLS enabled. Unreadable files or bundles without valid certificates fail startup.
 * `GRPC_MATE_LOG_LEVEL`: the log level, must be INFO, DEBUG, or ERROR, defaults to INFO
+
+For a TLS-enabled backend with a certificate trusted by the system CA store:
+
+```
+GRPC_MATE_PROXIED_HOST=grpc.example.com GRPC_MATE_PROXIED_PORT=443 GRPC_MATE_PROXIED_TLS_ENABLED=true ./grpc-mate
+```
+
+Public CA certificates normally need no CA file. For a private CA in Docker, mount the bundle read-only and use its **container path** (the image must include TLS support):
+
+```
+docker run -p 6600:6600 --mount type=bind,src=/absolute/path/company-ca.pem,dst=/certs/company-ca.pem,readonly \
+  -e GRPC_MATE_PROXIED_HOST=grpc.internal.example -e GRPC_MATE_PROXIED_PORT=443 \
+  -e GRPC_MATE_PROXIED_TLS_ENABLED=true -e GRPC_MATE_PROXIED_TLS_CA_FILE=/certs/company-ca.pem gdong/grpc-mate
+```
+
+A Kubernetes volume can supply the same readable file. The CA bundle adds trust without modifying the system store; hostname verification still applies. Client certificates/mTLS are not supported.
 
 ## Limitation
 
@@ -191,6 +209,8 @@ Currently, gRPC Mate works with Unary calls only. We are working on support Stre
 ## Contributing
 
 All kinds of contribution are welcome!
+
+CI runs Go 1.12.5 tests/build with vendored dependencies and checks TLS reflection/RPCs with a read-only CA mount in the Dockerfile runtime stage. It does not publish images.
 
 ## Credits
 * [mercari/grpc-http-proxy](https://github.com/mercari/grpc-http-proxy) - gRPC Mate project is originally forked from this project. Although going towards different directions in [design decisions](https://github.com/gdong42/grpc-mate/blob/master/DESIGN.md), many coding implementations are borrowed from it.
