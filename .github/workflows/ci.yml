@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      GO111MODULE: 'off'
+      CGO_ENABLED: '0'
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version: '1.12.5'
+          cache: false
+      - name: Set up GOPATH checkout
+        run: |
+          mkdir -p "$RUNNER_TEMP/gopath/src/github.com/gdong42"
+          ln -s "$GITHUB_WORKSPACE" "$RUNNER_TEMP/gopath/src/github.com/gdong42/grpc-mate"
+          echo "GOPATH=$RUNNER_TEMP/gopath" >> "$GITHUB_ENV"
+      - name: Test and build vendored source
+        run: |
+          cd "$GOPATH/src/github.com/gdong42/grpc-mate"
+          go test -count=1 ./...
+          go build -o grpc-mate .
+      - name: Build runtime image
+        run: |
+          # Reuse the Dockerfile runtime stage; avoid its legacy network/dep builder.
+          sed -n '/^FROM alpine$/,$p' Dockerfile | \
+            sed 's|COPY --from=builder /tmp/grpc-mate /app|COPY grpc-mate /app|' > "$RUNNER_TEMP/Dockerfile.runtime"
+          test -s "$RUNNER_TEMP/Dockerfile.runtime"
+          docker build -f "$RUNNER_TEMP/Dockerfile.runtime" -t grpc-mate:ci .
+      - name: Verify container TLS and read-only CA mount
+        env:
+          GRPC_MATE_CONTAINER_IMAGE: grpc-mate:ci
+        run: |
+          cd "$GOPATH/src/github.com/gdong42/grpc-mate"
+          go test -count=1 -run '^TestContainerTLS$' -v .

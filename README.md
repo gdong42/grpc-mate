@@ -1,7 +1,7 @@
 # gRPC Mate
 
 [![Go Report Card](https://goreportcard.com/badge/github.com/gdong42/grpc-mate)](https://goreportcard.com/report/github.com/gdong42/grpc-mate)
-[![Build Status](https://travis-ci.com/gdong42/grpc-mate.svg?branch=master)](https://travis-ci.com/gdong42/grpc-mate)
+[![CI](https://github.com/gdong42/grpc-mate/actions/workflows/ci.yml/badge.svg)](https://github.com/gdong42/grpc-mate/actions/workflows/ci.yml)
 [![Docker Pulls](https://img.shields.io/docker/pulls/gdong/grpc-mate.svg)](https://hub.docker.com/r/gdong/grpc-mate)
 [![MicroBadger Size (tag)](https://img.shields.io/microbadger/image-size/gdong/grpc-mate/latest.svg)](https://hub.docker.com/r/gdong/grpc-mate)
 [![Docker Image](https://images.microbadger.com/badges/version/gdong/grpc-mate.svg)](https://hub.docker.com/r/gdong/grpc-mate)
@@ -209,6 +209,8 @@ Currently, gRPC Mate works with Unary calls only. We are working on support Stre
 ## Contributing
 
 All kinds of contribution are welcome!
+
+CI runs Go 1.12.5 tests/build with vendored dependencies and checks TLS reflection/RPCs with a read-only CA mount in the Dockerfile runtime stage. It does not publish images.
 
 ## Credits
 * [mercari/grpc-http-proxy](https://github.com/mercari/grpc-http-proxy) - gRPC Mate project is originally forked from this project. Although going towards different directions in [design decisions](https://github.com/gdong42/grpc-mate/blob/master/DESIGN.md), many coding implementations are borrowed from it.
