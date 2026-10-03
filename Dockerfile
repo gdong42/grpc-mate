@@ -1,6 +1,8 @@
 FROM golang:1.12-alpine AS builder
 RUN apk --no-cache add git bzr mercurial
 ENV D=/go/src/github.com/gdong42/grpc-mate
+# The proxy and dep are pure Go; avoid an implicit ARM64 external linker.
+ENV CGO_ENABLED=0
 RUN go get -u github.com/golang/dep/...
 ADD ./Gopkg.* $D/
 RUN cd $D && dep ensure -v --vendor-only
