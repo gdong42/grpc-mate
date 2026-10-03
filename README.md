@@ -163,6 +163,14 @@ Now try get `http://localhost:6600/actuator/services`, you will see all services
 
 ```
 
+Filter the response by exact, case-sensitive service `name`, method `method`, or both:
+
+* `/actuator/services?name=helloworld.Greeter`
+* `/actuator/services?method=SayHello`
+* `/actuator/services?name=helloworld.Greeter&method=SayHello`
+
+Only matching services, matching methods, and their input/output type templates are returned. Shared types appear once. Both filters must match when combined; no match returns `{"services":[],"types":[]}` with HTTP 200. Missing or empty filters match everything, so requests without filters are unchanged.
+
 ### Making Requests
 
 Now let's try making gRPC requests using above inspected information

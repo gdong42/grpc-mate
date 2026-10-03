@@ -19,8 +19,9 @@ import (
 )
 
 type mockClient struct {
-	isReady   bool
-	invokeErr error
+	isReady      bool
+	invokeErr    error
+	name, method string
 }
 
 func (c *mockClient) IsReady() bool {
@@ -42,7 +43,8 @@ func (c *mockClient) Invoke(ctx context.Context,
 	return []byte(response), nil
 }
 
-func (c *mockClient) Introspect() ([]byte, error) {
+func (c *mockClient) IntrospectFiltered(name, method string) ([]byte, error) {
+	c.name, c.method = name, method
 	response := `{"services":[{
 		"name": "helloworld.Greeter",
 		"methods": []
@@ -250,6 +252,26 @@ func TestRPCCallHandlerGRPCErrors(t *testing.T) {
 			}
 			if !reflect.DeepEqual(&actual, upstreamErr) {
 				t.Errorf("gRPC error body: got %+v, want %+v", &actual, upstreamErr)
+			}
+		})
+	}
+}
+
+func TestIntrospectHandlerFilters(t *testing.T) {
+	for _, tc := range []struct{ query, name, method string }{
+		{"", "", ""},
+		{"?name=example.Greeter", "example.Greeter", ""},
+		{"?method=SayHello", "", "SayHello"},
+		{"?name=example.Greeter&method=SayHello", "example.Greeter", "SayHello"},
+		{"?name=&method=", "", ""},
+	} {
+		t.Run(tc.query, func(t *testing.T) {
+			client := &mockClient{isReady: true}
+			server := New(client, zap.NewNop())
+			rr := httptest.NewRecorder()
+			server.router.ServeHTTP(rr, httptest.NewRequest(http.MethodGet, "/actuator/services"+tc.query, nil))
+			if rr.Code != http.StatusOK || client.name != tc.name || client.method != tc.method {
+				t.Fatalf("status=%d, filters=(%q, %q), want (200, %q, %q)", rr.Code, client.name, client.method, tc.name, tc.method)
 			}
 		})
 	}

@@ -45,7 +45,8 @@ func (s *Server) IntrospectHandler(client GrpcClient) http.HandlerFunc {
 			w.WriteHeader(http.StatusBadGateway)
 			return
 		}
-		response, err := client.Introspect()
+		query := r.URL.Query()
+		response, err := client.IntrospectFiltered(query.Get("name"), query.Get("method"))
 		if err != nil {
 			returnError(w, errors.Cause(err).(perrors.Error))
 			s.logger.Error("error in introspection",
