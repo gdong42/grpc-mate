@@ -3,8 +3,8 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/gdong42/grpc-mate)](https://goreportcard.com/report/github.com/gdong42/grpc-mate)
 [![CI](https://github.com/gdong42/grpc-mate/actions/workflows/ci.yml/badge.svg)](https://github.com/gdong42/grpc-mate/actions/workflows/ci.yml)
 [![Docker Pulls](https://img.shields.io/docker/pulls/gdong/grpc-mate.svg)](https://hub.docker.com/r/gdong/grpc-mate)
-[![MicroBadger Size (tag)](https://img.shields.io/microbadger/image-size/gdong/grpc-mate/latest.svg)](https://hub.docker.com/r/gdong/grpc-mate)
-[![Docker Image](https://images.microbadger.com/badges/version/gdong/grpc-mate.svg)](https://hub.docker.com/r/gdong/grpc-mate)
+[![Docker Image Size (amd64)](https://img.shields.io/docker/image-size/gdong/grpc-mate/latest.svg?arch=amd64&label=image%20size%20%28amd64%29)](https://hub.docker.com/r/gdong/grpc-mate/tags)
+[![Docker Latest](https://img.shields.io/docker/v/gdong/grpc-mate/latest.svg?arch=amd64&label=docker%20latest)](https://hub.docker.com/r/gdong/grpc-mate/tags)
 
 gRPC Mate is a light weight reverse proxy server that translates JSON HTTP requests into gRPC calls without the need of 
 code generation. It reads protobuf service definitions through accessing reflection API exposed by the gRPC service, 
