@@ -22,6 +22,7 @@ type GrpcClient interface {
 }
 
 // FilteredIntrospector is an optional capability for exact introspection filters.
+// With both filters empty, it must be equivalent to Introspect.
 type FilteredIntrospector interface {
 	IntrospectFiltered(name, method string) (response []byte, err error)
 }

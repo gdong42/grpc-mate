@@ -324,12 +324,8 @@ func TestIntrospectHandlerFilters(t *testing.T) {
 			if rr.Code != http.StatusOK || client.name != tc.name || client.method != tc.method {
 				t.Fatalf("status=%d, filters=(%q, %q), want (200, %q, %q)", rr.Code, client.name, client.method, tc.name, tc.method)
 			}
-			wantFiltered, wantPlain := 1, 0
-			if tc.name == "" && tc.method == "" {
-				wantFiltered, wantPlain = 0, 1
-			}
-			if client.filteredCalls != wantFiltered || client.introspectCalls != wantPlain {
-				t.Errorf("filtered/plain calls=%d/%d, want %d/%d", client.filteredCalls, client.introspectCalls, wantFiltered, wantPlain)
+			if client.filteredCalls != 1 || client.introspectCalls != 0 {
+				t.Errorf("filtered/plain calls=%d/%d, want 1/0", client.filteredCalls, client.introspectCalls)
 			}
 		})
 	}
