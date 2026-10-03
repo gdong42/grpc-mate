@@ -171,6 +171,8 @@ Filter the response by exact, case-sensitive service `name`, method `method`, or
 
 Only matching services, matching methods, and their input/output type templates are returned. Shared types appear once. Both filters must match when combined; no match returns `{"services":[],"types":[]}` with HTTP 200. Missing or empty filters match everything, so requests without filters are unchanged.
 
+For custom Go HTTP clients, the original `GrpcClient` interface (including `Introspect()`) is unchanged. Clients may additionally implement `FilteredIntrospector` to support filters; nonempty filters return HTTP 501 when that capability is absent. Unfiltered requests always use `Introspect()`.
+
 ### Making Requests
 
 Now let's try making gRPC requests using above inspected information

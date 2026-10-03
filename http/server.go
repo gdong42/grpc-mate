@@ -18,6 +18,11 @@ type GrpcClient interface {
 		message []byte,
 		md *metadata.Metadata,
 	) (response []byte, err error)
+	Introspect() (response []byte, err error)
+}
+
+// FilteredIntrospector is an optional capability for exact introspection filters.
+type FilteredIntrospector interface {
 	IntrospectFiltered(name, method string) (response []byte, err error)
 }
 
