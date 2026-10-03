@@ -1,0 +1,108 @@
+name: Lint
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+permissions:
+  contents: read
+
+jobs:
+  legacy-checks:
+    name: Go 1.12 vet and format
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      GO111MODULE: 'off'
+      CGO_ENABLED: '0'
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version: '1.12.5'
+          cache: false
+      - name: Set up GOPATH checkout
+        run: |
+          mkdir -p "$RUNNER_TEMP/gopath/src/github.com/gdong42"
+          ln -s "$GITHUB_WORKSPACE" "$RUNNER_TEMP/gopath/src/github.com/gdong42/grpc-mate"
+          echo "GOPATH=$RUNNER_TEMP/gopath" >> "$GITHUB_ENV"
+      - name: Check formatting and vet vendored source
+        run: |
+          cd "$GOPATH/src/github.com/gdong42/grpc-mate"
+          unformatted=$(git ls-files -z '*.go' ':!:vendor/**' | xargs -0 gofmt -l)
+          if [ -n "$unformatted" ]; then
+            printf 'Run Go 1.12.5 gofmt on:\n%s\n' "$unformatted"
+            exit 1
+          fi
+          go vet ./...
+
+  modern-advisory:
+    name: Modern lint (advisory findings)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      GO111MODULE: 'off'
+      CGO_ENABLED: '0'
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version: '1.27.1'
+          cache: false
+      - name: Set up isolated lint tools and GOPATH
+        run: |
+          mkdir -p "$RUNNER_TEMP/lint-tools" "$RUNNER_TEMP/gopath/src/github.com/gdong42"
+          ln -s "$GITHUB_WORKSPACE" "$RUNNER_TEMP/gopath/src/github.com/gdong42/grpc-mate"
+          echo "GOPATH=$RUNNER_TEMP/gopath" >> "$GITHUB_ENV"
+          cd "$RUNNER_TEMP/lint-tools"
+          curl --fail --silent --show-error --location --retry 3 \
+            https://github.com/golangci/golangci-lint/releases/download/v2.14.0/golangci-lint-2.14.0-linux-amd64.tar.gz \
+            -o lint.tar.gz
+          echo 'ab90aeb7b066f92a33415b638a50fe5344bbb75a0d32ad30cc248d88f81032ab  lint.tar.gz' | sha256sum --check
+          tar -xzf lint.tar.gz
+          echo "$RUNNER_TEMP/lint-tools/golangci-lint-2.14.0-linux-amd64" >> "$GITHUB_PATH"
+      - name: Report modern lint findings
+        run: |
+          cd "$GOPATH/src/github.com/gdong42/grpc-mate"
+          mkdir -p "$RUNNER_TEMP/lint-results"
+          go version
+          golangci-lint version
+          set +e
+          golangci-lint run --config "$GITHUB_WORKSPACE/.golangci.yml" \
+            --max-issues-per-linter 0 --max-same-issues 0 --uniq-by-line=false \
+            --output.json.path "$RUNNER_TEMP/lint-results/findings.json" ./... \
+            > "$RUNNER_TEMP/lint-results/lint.log" 2>&1
+          status=$?
+          set -e
+          cat "$RUNNER_TEMP/lint-results/lint.log"
+          echo "Exit code: $status" >> "$RUNNER_TEMP/lint-results/lint.log"
+          {
+            echo '## Modern lint (advisory)'
+            echo 'golangci-lint 2.14.0 / Go 1.27.1; production remains Go 1.12.5.'
+            echo 'See the lint-results artifact for the complete log and JSON diagnostics.'
+            echo 'Diagnostics may overlap; they are review suggestions, not a bug count or security scan.'
+          } >> "$GITHUB_STEP_SUMMARY"
+          case "$status" in
+            0) echo 'Analysis completed with no reported findings.' >> "$GITHUB_STEP_SUMMARY" ;;
+            1)
+              echo 'Analysis completed with advisory findings; these do not fail CI.' >> "$GITHUB_STEP_SUMMARY"
+              echo '::notice::Modern lint found advisory diagnostics. See job summary and lint-results artifact.'
+              ;;
+            *)
+              echo "Analysis failed (exit $status); this is a tooling failure, not a clean lint result." >> "$GITHUB_STEP_SUMMARY"
+              exit "$status"
+              ;;
+          esac
+      - name: Upload lint diagnostics
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: lint-results
+          path: ${{ runner.temp }}/lint-results/
+          if-no-files-found: warn
+          retention-days: 14

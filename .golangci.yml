@@ -1,0 +1,17 @@
+version: "2"
+run:
+  go: "1.12"
+  relative-path-mode: gitroot
+  timeout: 5m
+linters:
+  default: standard
+  settings:
+    govet:
+      # Modern standard-library inline replacements may require Go > 1.12.
+      disable: [inline]
+  exclusions:
+    rules:
+      # Retain APIs required by the production Go 1.12 toolchain. Keep other
+      # deprecation checks, including dependency deprecations, visible.
+      - linters: [staticcheck]
+        text: 'SA1019: (io/ioutil|\(\*crypto/x509\.CertPool\)\.Subjects)'
