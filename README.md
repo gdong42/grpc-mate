@@ -1,6 +1,5 @@
 # gRPC Mate
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/gdong42/grpc-mate)](https://goreportcard.com/report/github.com/gdong42/grpc-mate)
 [![CI](https://github.com/gdong42/grpc-mate/actions/workflows/ci.yml/badge.svg)](https://github.com/gdong42/grpc-mate/actions/workflows/ci.yml)
 [![Docker Pulls](https://img.shields.io/docker/pulls/gdong/grpc-mate.svg)](https://hub.docker.com/r/gdong/grpc-mate)
 [![Docker Image Size (amd64)](https://img.shields.io/docker/image-size/gdong/grpc-mate/latest.svg?arch=amd64&label=image%20size%20%28amd64%29)](https://hub.docker.com/r/gdong/grpc-mate/tags)
@@ -220,7 +219,7 @@ Currently, gRPC Mate works with Unary calls only. We are working on support Stre
 
 All kinds of contribution are welcome!
 
-CI runs Go 1.12.5 tests/build with vendored dependencies and checks TLS reflection/RPCs with a read-only CA mount in the Dockerfile runtime stage. It does not publish images.
+CI runs Go 1.12.5 tests/build with vendored dependencies and checks TLS reflection/RPCs with a read-only CA mount in the Dockerfile runtime stage. It does not publish images. The Lint workflow enforces Go 1.12.5 vet and formatting checks; a separate modern-toolchain job publishes advisory diagnostics without changing the production build. Lint tooling failures still fail that job.
 
 ## Credits
 * [mercari/grpc-http-proxy](https://github.com/mercari/grpc-http-proxy) - gRPC Mate project is originally forked from this project. Although going towards different directions in [design decisions](https://github.com/gdong42/grpc-mate/blob/master/DESIGN.md), many coding implementations are borrowed from it.
