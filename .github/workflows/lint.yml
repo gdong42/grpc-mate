@@ -75,7 +75,7 @@ jobs:
           set +e
           golangci-lint run --config "$GITHUB_WORKSPACE/.golangci.yml" \
             --max-issues-per-linter 0 --max-same-issues 0 --uniq-by-line=false \
-            --output.json.path "$RUNNER_TEMP/lint-results/findings.json" ./... \
+            --output.text.path stdout --output.json.path "$RUNNER_TEMP/lint-results/findings.json" ./... \
             > "$RUNNER_TEMP/lint-results/lint.log" 2>&1
           status=$?
           set -e
@@ -86,6 +86,7 @@ jobs:
             echo 'golangci-lint 2.14.0 / Go 1.27.1; production remains Go 1.12.5.'
             echo 'See the lint-results artifact for the complete log and JSON diagnostics.'
             echo 'Diagnostics may overlap; they are review suggestions, not a bug count or security scan.'
+            echo 'GOPATH mode currently emits nonfatal missing-go.mod formatter/cache messages; package analysis still runs.'
           } >> "$GITHUB_STEP_SUMMARY"
           case "$status" in
             0) echo 'Analysis completed with no reported findings.' >> "$GITHUB_STEP_SUMMARY" ;;
