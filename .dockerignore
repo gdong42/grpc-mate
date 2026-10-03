@@ -1,0 +1,11 @@
+.git
+.github
+.agents
+.codex
+.aws
+.env
+.env.*
+grpc-mate
+*.test
+*.out
+release-artifacts

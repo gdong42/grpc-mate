@@ -219,7 +219,7 @@ Currently, gRPC Mate works with Unary calls only. We are working on support Stre
 
 All kinds of contribution are welcome!
 
-CI runs Go 1.12.5 tests/build with vendored dependencies and checks TLS reflection/RPCs with a read-only CA mount in the Dockerfile runtime stage. It does not publish images. The Lint workflow enforces Go 1.12.5 vet and formatting checks; a separate modern-toolchain job publishes advisory diagnostics without changing the production build. Lint tooling failures still fail that job.
+CI runs Go 1.12.5 tests/build with vendored dependencies and builds the complete Dockerfile and smoke-tests TLS/read-only CA mounts, plaintext RPCs, reflection filters, and error responses in the resulting image. It retains checksummed linux/amd64 and linux/arm64 candidate images and build evidence for 14 days; it does not publish images. The Lint workflow enforces Go 1.12.5 vet and formatting checks; a separate modern-toolchain job publishes advisory diagnostics without changing the production build. Lint tooling failures still fail that job.
 
 ## Credits
 * [mercari/grpc-http-proxy](https://github.com/mercari/grpc-http-proxy) - gRPC Mate project is originally forked from this project. Although going towards different directions in [design decisions](https://github.com/gdong42/grpc-mate/blob/master/DESIGN.md), many coding implementations are borrowed from it.
