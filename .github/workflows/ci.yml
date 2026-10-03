@@ -33,13 +33,8 @@ jobs:
           cd "$GOPATH/src/github.com/gdong42/grpc-mate"
           go test -count=1 ./...
           go build -o grpc-mate .
-      - name: Build runtime image
-        run: |
-          # Reuse the Dockerfile runtime stage; avoid its legacy network/dep builder.
-          sed -n '/^FROM alpine$/,$p' Dockerfile | \
-            sed 's|COPY --from=builder /tmp/grpc-mate /app|COPY grpc-mate /app|' > "$RUNNER_TEMP/Dockerfile.runtime"
-          test -s "$RUNNER_TEMP/Dockerfile.runtime"
-          docker build -f "$RUNNER_TEMP/Dockerfile.runtime" -t grpc-mate:ci .
+      - name: Build complete Dockerfile
+        run: docker build --pull --no-cache --platform linux/amd64 --progress plain -t grpc-mate:ci .
       - name: Verify container TLS and read-only CA mount
         env:
           GRPC_MATE_CONTAINER_IMAGE: grpc-mate:ci
