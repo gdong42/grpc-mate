@@ -1,9 +1,9 @@
 # gRPC Mate
 
 [![CI](https://github.com/gdong42/grpc-mate/actions/workflows/ci.yml/badge.svg)](https://github.com/gdong42/grpc-mate/actions/workflows/ci.yml)
-[![Docker Pulls](https://img.shields.io/docker/pulls/gdong/grpc-mate.svg)](https://hub.docker.com/r/gdong/grpc-mate)
-[![Docker Image Size (amd64)](https://img.shields.io/docker/image-size/gdong/grpc-mate/latest.svg?arch=amd64&label=image%20size%20%28amd64%29)](https://hub.docker.com/r/gdong/grpc-mate/tags)
-[![Docker Latest](https://img.shields.io/docker/v/gdong/grpc-mate/latest.svg?arch=amd64&label=docker%20latest)](https://hub.docker.com/r/gdong/grpc-mate/tags)
+[![Docker Pulls](https://img.shields.io/docker/pulls/gdong42/grpc-mate.svg)](https://hub.docker.com/r/gdong42/grpc-mate)
+[![Docker Image Size (amd64)](https://img.shields.io/docker/image-size/gdong42/grpc-mate/latest.svg?arch=amd64&label=image%20size%20%28amd64%29)](https://hub.docker.com/r/gdong42/grpc-mate/tags)
+[![Docker Latest](https://img.shields.io/docker/v/gdong42/grpc-mate/latest.svg?arch=amd64&label=docker%20latest)](https://hub.docker.com/r/gdong42/grpc-mate/tags)
 
 gRPC Mate is a light weight reverse proxy server that translates JSON HTTP requests into gRPC calls without the need of 
 code generation. It reads protobuf service definitions through accessing reflection API exposed by the gRPC service, 
@@ -29,7 +29,7 @@ telling if the service is healthy, and `/actuator/services` introspecting all se
 
 ## Installation
 
-It's recommended to use pre-built docker image `gdong/grpc-mate` directly. You can also choose to build from source.
+It's recommended to use pre-built docker image `gdong42/grpc-mate` directly. You can also choose to build from source.
 
 ### Build from source
 
@@ -123,7 +123,7 @@ It's really simple to run. Let's connect to the gRPC server started above as an 
 #### Run gRPC Mate via Docker
 
 ```
-$ docker run --name grpc-mate -e GRPC_MATE_PROXIED_HOST=<your grpc server local IP> -e GRPC_MATE_PROXIED_PORT=50051 -dp 6600:6600 gdong/grpc-mate
+$ docker run --name grpc-mate -e GRPC_MATE_PROXIED_HOST=<your grpc server local IP> -e GRPC_MATE_PROXIED_PORT=50051 -dp 6600:6600 gdong42/grpc-mate
 ```
 
 Note above `GRPC_MATE_PROXIED_HOST` has to be set to your IP address other than localhost, so that grpc-mate running inside docker can access it.
@@ -206,7 +206,7 @@ Public CA certificates normally need no CA file. For a private CA in Docker, mou
 ```
 docker run -p 6600:6600 --mount type=bind,src=/absolute/path/company-ca.pem,dst=/certs/company-ca.pem,readonly \
   -e GRPC_MATE_PROXIED_HOST=grpc.internal.example -e GRPC_MATE_PROXIED_PORT=443 \
-  -e GRPC_MATE_PROXIED_TLS_ENABLED=true -e GRPC_MATE_PROXIED_TLS_CA_FILE=/certs/company-ca.pem gdong/grpc-mate
+  -e GRPC_MATE_PROXIED_TLS_ENABLED=true -e GRPC_MATE_PROXIED_TLS_CA_FILE=/certs/company-ca.pem gdong42/grpc-mate
 ```
 
 A Kubernetes volume can supply the same readable file. The CA bundle adds trust without modifying the system store; hostname verification still applies. Client certificates/mTLS are not supported.
