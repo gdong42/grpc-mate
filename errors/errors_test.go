@@ -16,6 +16,10 @@ func TestError_Error(t *testing.T) {
 		msg string
 	}{
 		{
+			Code: ReflectionUnavailable,
+			msg:  "upstream server reflection is unavailable",
+		},
+		{
 			Code: UpstreamConnFailure,
 			msg:  "could not connect to backend gRPC service",
 		},

@@ -108,6 +108,8 @@ Make sure [Server Reflection](https://github.com/grpc/grpc/blob/master/doc/serve
             }
     ```
 
+If upstream reflection is unimplemented, RPC requests and `/actuator/services` return HTTP 502 with guidance to enable it.
+
 For demonstration, we start the gRPC example server with reflection enabled provided at https://github.com/grpc/grpc-go/tree/master/examples/features/reflection
 
 ```

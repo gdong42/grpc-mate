@@ -7,8 +7,12 @@ import (
 
 	perrors "github.com/gdong42/grpc-mate/errors"
 	"github.com/gdong42/grpc-mate/proxy/test"
+	"github.com/jhump/protoreflect/desc"
 	"github.com/jhump/protoreflect/dynamic"
-	_ "google.golang.org/grpc/test/grpc_testing"
+	"github.com/pkg/errors"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	pb "google.golang.org/grpc/test/grpc_testing"
 )
 
 func TestNewReflector(t *testing.T) {
@@ -442,3 +446,37 @@ func TestMessage_UnmarshalJSON(t *testing.T) {
 		})
 	}
 }
+
+func TestReflectionErrors(t *testing.T) {
+	detailStatus, err := status.New(codes.PermissionDenied, "reflection requires permission").WithDetails(&pb.Empty{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, tc := range []struct {
+		name  string
+		input error
+		want  perrors.Error
+	}{
+		{"plain error", fmt.Errorf("invalid descriptor"), &perrors.ProxyError{Code: perrors.Unknown, Message: "upstream server reflection failed: invalid descriptor"}},
+		{"wrapped unimplemented", errors.Wrap(status.Error(codes.Unimplemented, "unknown service"), "reflection"), &perrors.ProxyError{Code: perrors.ReflectionUnavailable, Message: "upstream gRPC server does not support server reflection; enable server reflection on the upstream server"}},
+		{"permission details", detailStatus.Err(), &perrors.GRPCError{StatusCode: int(codes.PermissionDenied), Message: detailStatus.Message(), Details: detailStatus.Proto().Details}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			c := newReflectionClient(&failingReflectionClient{err: tc.input})
+			_, resolveErr := c.resolveService(test.TestService)
+			_, listErr := c.listServices()
+			for _, got := range []error{resolveErr, listErr} {
+				if !reflect.DeepEqual(got, tc.want) {
+					t.Fatalf("got %#v, want %#v", got, tc.want)
+				}
+			}
+		})
+	}
+}
+
+type failingReflectionClient struct{ err error }
+
+func (c *failingReflectionClient) ResolveService(string) (*desc.ServiceDescriptor, error) {
+	return nil, c.err
+}
+func (c *failingReflectionClient) ListServices() ([]string, error) { return nil, c.err }
